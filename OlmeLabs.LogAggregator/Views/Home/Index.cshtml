@@ -1,0 +1,95 @@
+﻿@using OlmeLabs.LogAggregator.Models
+@model SearchViewModel
+@using (Html.BeginForm("Search", "Home", FormMethod.Post, new { id = "frmSearch" }))
+{
+    <div class="row">
+        <div class="col-lg-6 col-lg-offset-2">
+            <div class="input-group input-group-lg ">
+                <input type="hidden" id="CurrentPage" name="CurrentPage" value="@(Model?.SearchOptions?.CurrentPage ?? 1)" />
+                <input type="text" id="keywords" name="keywords" class="form-control" placeholder="Search for..." required value="@(Model?.SearchOptions?.Keywords)">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit" onclick="javascript: $('#CurrentPage').val('1');">Go!</button>
+                </span>
+            </div>
+        </div>
+    </div>
+}
+@if (Model?.SearchResults != null && Model.SearchResults.Count == 0)
+{
+    <div class="row">
+        <div class="col-lg-6 col-lg-offset-2">
+            <h3>No results found.</h3>
+        </div>
+    </div>
+}
+else if (Model?.SearchResults != null && Model.SearchResults.Count > 0)
+{
+    <div class="row spacer40">
+        <div class="col-lg-12">
+            @if (Model?.SearchOptions?.Mode == SearchMode.RecentPage)
+            {
+                <div class="float-left"><b>Recent logs</b></div>
+            }
+            <div class="float-right">
+                <b>@Model.SearchResults.Count</b> records found
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th><span class="nowrap">Sys / Env</span></th>
+                        <th>Date</th>
+                        <th>Severity</th>
+                        <th>Content</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var log in Model.SearchResults.Result)
+                {
+                        <tr>
+                            <td>
+                                @log.Sys / @log.Env
+                            </td>
+                            <td>
+                                @log.StoreDate.ToString("G")
+                            </td>
+                            <td>
+                                @log.Severity
+                            </td>
+                            <td>
+                                @(log.Content.Length > 500 ? log.Content.Substring(0, 500) + "..." : log.Content)
+                                <div class="float-right">
+                                    @Html.ActionLink("View", "Details", new { id = log.Id })
+                                </div>
+                            </td>
+                        </tr>
+                }
+                </tbody>
+            </table>
+            <div class="paginator" id="paginator1"></div>
+        </div>
+    </div>
+}
+
+@section scripts{
+    <script src="../../Scripts/jquery.paginator.3000.js"></script>
+    @if (Model?.SearchResults?.Count > Model?.SearchOptions?.PageSize)
+    {
+        <script language="javascript">
+            $(document).ready(function() {
+                $('#paginator1').paginator({
+                    pagesTotal: @(Math.Ceiling((decimal)Model.SearchResults.Count / Model.SearchOptions.PageSize)),
+                    pagesSpan: 10,
+                    pageCurrent: @Model.SearchOptions.CurrentPage,
+                    baseUrl: 'Search?page=%number%',
+                    clickHandler: function (page) {
+                        if (isNaN(page))
+                            return false;
+                        $('#CurrentPage').val(page);
+                        $('#frmSearch').submit();
+                        return false;
+                    }
+                });
+            });
+        </script>
+    }
+}

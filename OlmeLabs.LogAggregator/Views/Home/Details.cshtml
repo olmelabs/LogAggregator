@@ -1,0 +1,8 @@
+﻿@model OlmeLabs.LogAggregator.Models.LogEntry
+
+<h3>@(Model?.Sys) @(Model?.Env)</h3>
+
+<h3>@(Model?.StoreDate.ToString("G"))</h3>
+<pre>
+    @Html.Raw(Model?.Content);
+</pre>
